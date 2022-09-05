@@ -56,8 +56,8 @@ export class TuyaThermostatAccessory {
     this.client.on('data', data => {
       this.device.state = data.dps['1'];
       this.device.isWarming = data.dps['102'] === '0' ? true : false;
-      this.device.targetTemp = Math.max(10, data.dps['2']);
-      this.device.currentTemp = Math.max(10, data.dps['3']/2);
+      this.device.targetTemp = Math.max(10, data.dps['2'] / 2);
+      this.device.currentTemp = Math.max(10, data.dps['3'] / 2);
 
       this.platform.log.debug('device synced', { dev: this.device });
     });
