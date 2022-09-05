@@ -57,7 +57,7 @@ export class TuyaThermostatAccessory {
       this.device.state = data.dps['1'];
       this.device.isWarming = data.dps['102'] === '0' ? true : false;
       this.device.targetTemp = Math.max(10, data.dps['2']);
-      this.device.currentTemp = Math.max(10, data.dps['3']);
+      this.device.currentTemp = Math.max(10, data.dps['3']/2);
 
       this.platform.log.debug('device synced', { dev: this.device });
     });
@@ -145,7 +145,7 @@ export class TuyaThermostatAccessory {
   }
 
   async setTargetTemperature(value: CharacteristicValue) {
-    const convertedTemp = (value as number);
+    const convertedTemp = (value as number)*2 ;
 
     await this.client.set({dps: 2, set: convertedTemp});
   }
