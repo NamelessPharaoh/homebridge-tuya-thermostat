@@ -3,6 +3,7 @@ import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 import { Device, TuyaHomebridgePlatform } from './platform';
 
 import TuyAPI from 'tuyapi';
+import {CurrentHeaterCoolerState} from "hap-nodejs/dist/lib/definitions/CharacteristicDefinitions";
 
 export class TuyaThermostatAccessory {
   private service: Service;
@@ -34,10 +35,10 @@ export class TuyaThermostatAccessory {
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
     this.service.setCharacteristic(this.platform.Characteristic.Name, this.device.name);
 
-    this.service.getCharacteristic(this.platform.Characteristic.CurrentHeatingCoolingState)
+    this.service.getCharacteristic(this.platform.Characteristic.CurrentHeaterCoolerState)
       .onGet(this.getCurrentHeatingCoolingState.bind(this));
 
-    this.service.getCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState)
+    this.service.getCharacteristic(this.platform.Characteristic.TargetHeaterCoolerState)
       .onGet(this.getTargetHeatingCoolingState.bind(this))
       .onSet(this.setTargetHeatingCoolingState.bind(this));
 
@@ -110,15 +111,20 @@ export class TuyaThermostatAccessory {
 
   async getTargetHeatingCoolingState(): Promise<CharacteristicValue> {
     if (this.device.state) {
-      return this.platform.Characteristic.CurrentHeatingCoolingState.HEAT;
+      if (this.device.isWarming) {
+        return this.platform.Characteristic.CurrentHeaterCoolerState.HEATING;  
+      } else {
+        return this.platform.Characteristic.CurrentHeaterCoolerState.IDLE;
+      }
     }
 
-    return this.platform.Characteristic.CurrentHeatingCoolingState.OFF;
+    return this.platform.Characteristic.CurrentHeaterCoolerState.INACTIVE;
   }
 
   async setTargetHeatingCoolingState(value: CharacteristicValue) {
-    if (value !== this.platform.Characteristic.CurrentHeatingCoolingState.HEAT) {
+    if (value !== this.platform.Characteristic.CurrentHeaterCoolerState.HEATING) {
       await this.client.set({dps: 102, set: 0});
+      await this.client.set({dps: 1, set: 0});
       return;
     }
 
