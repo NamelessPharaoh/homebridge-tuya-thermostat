@@ -3,7 +3,6 @@ import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 import { Device, TuyaHomebridgePlatform } from './platform';
 
 import TuyAPI from 'tuyapi';
-import {CurrentHeaterCoolerState} from "hap-nodejs/dist/lib/definitions/CharacteristicDefinitions";
 
 export class TuyaThermostatAccessory {
   private service: Service;
@@ -35,12 +34,19 @@ export class TuyaThermostatAccessory {
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
     this.service.setCharacteristic(this.platform.Characteristic.Name, this.device.name);
 
-    this.service.getCharacteristic(this.platform.Characteristic.CurrentHeaterCoolerState)
+    this.service.getCharacteristic(this.platform.Characteristic.CurrentHeatingCoolingState)
       .onGet(this.getCurrentHeatingCoolingState.bind(this));
 
-    this.service.getCharacteristic(this.platform.Characteristic.TargetHeaterCoolerState)
+    this.service.getCharacteristic(this.platform.Characteristic.CurrentHeaterCoolerState)
+        .onGet(this.getCurrentHeaterCoolerState.bind(this));
+
+    this.service.getCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState)
       .onGet(this.getTargetHeatingCoolingState.bind(this))
       .onSet(this.setTargetHeatingCoolingState.bind(this));
+
+    this.service.getCharacteristic(this.platform.Characteristic.TargetHeaterCoolerState)
+        .onGet(this.getTargetHeaterCoolerState.bind(this))
+        .onSet(this.setTargetHeaterCoolerState.bind(this));
 
     this.service.getCharacteristic(this.platform.Characteristic.CurrentTemperature)
       .onGet(this.getCurrentTemperature.bind(this));
@@ -103,13 +109,13 @@ export class TuyaThermostatAccessory {
 
   async getCurrentHeatingCoolingState(): Promise<CharacteristicValue> {
     if (this.device.isWarming) {
-      return this.platform.Characteristic.TargetHeatingCoolingState.HEAT;
+      return this.platform.Characteristic.CurrentHeatingCoolingState.HEAT;
     }
 
-    return this.platform.Characteristic.TargetHeatingCoolingState.OFF;
+    return this.platform.Characteristic.CurrentHeatingCoolingState.OFF;
   }
-
-  async getTargetHeatingCoolingState(): Promise<CharacteristicValue> {
+  
+  async getCurrentHeaterCoolerState(): Promise<CharacteristicValue> {
     if (this.device.state) {
       if (this.device.isWarming) {
         return this.platform.Characteristic.CurrentHeaterCoolerState.HEATING;  
@@ -121,8 +127,37 @@ export class TuyaThermostatAccessory {
     return this.platform.Characteristic.CurrentHeaterCoolerState.INACTIVE;
   }
 
+  async getTargetHeatingCoolingState(): Promise<CharacteristicValue> {
+    if (this.device.state) {
+      return this.platform.Characteristic.TargetHeatingCoolingState.HEAT;
+    }
+
+    return this.platform.Characteristic.TargetHeatingCoolingState.OFF;
+  }
+  
+  async getTargetHeaterCoolerState(): Promise<CharacteristicValue> {
+    if (this.device.state) {
+      return this.platform.Characteristic.TargetHeaterCoolerState.HEAT;
+    }
+
+    return this.platform.Characteristic.TargetHeaterCoolerState.AUTO;
+  }
+
   async setTargetHeatingCoolingState(value: CharacteristicValue) {
-    if (value !== this.platform.Characteristic.CurrentHeaterCoolerState.HEATING) {
+    if (value !== this.platform.Characteristic.CurrentHeatingCoolingState.HEAT) {
+      await this.client.set({dps: 102, set: 0});
+      await this.client.set({dps: 1, set: 0});
+      return;
+    }
+
+    await Promise.all([
+      //this.client.set({dps: 103, set: 'hold'}),
+      this.client.set({dps: 1, set: true}),
+    ]);
+  }
+  
+  async setTargetHeaterCoolerState(value: CharacteristicValue) {
+    if (value !== this.platform.Characteristic.TargetHeaterCoolerState.HEAT) {
       await this.client.set({dps: 102, set: 0});
       await this.client.set({dps: 1, set: 0});
       return;
