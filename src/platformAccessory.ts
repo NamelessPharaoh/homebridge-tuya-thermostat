@@ -38,15 +38,15 @@ export class TuyaThermostatAccessory {
       .onGet(this.getCurrentHeatingCoolingState.bind(this));
 
     this.service.getCharacteristic(this.platform.Characteristic.CurrentHeaterCoolerState)
-        .onGet(this.getCurrentHeaterCoolerState.bind(this));
+      .onGet(this.getCurrentHeaterCoolerState.bind(this));
 
     this.service.getCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState)
       .onGet(this.getTargetHeatingCoolingState.bind(this))
       .onSet(this.setTargetHeatingCoolingState.bind(this));
 
     this.service.getCharacteristic(this.platform.Characteristic.TargetHeaterCoolerState)
-        .onGet(this.getTargetHeaterCoolerState.bind(this))
-        .onSet(this.setTargetHeaterCoolerState.bind(this));
+      .onGet(this.getTargetHeaterCoolerState.bind(this))
+      .onSet(this.setTargetHeaterCoolerState.bind(this));
 
     this.service.getCharacteristic(this.platform.Characteristic.CurrentTemperature)
       .onGet(this.getCurrentTemperature.bind(this));
@@ -114,11 +114,11 @@ export class TuyaThermostatAccessory {
 
     return this.platform.Characteristic.CurrentHeatingCoolingState.OFF;
   }
-  
+
   async getCurrentHeaterCoolerState(): Promise<CharacteristicValue> {
     if (this.device.state) {
       if (this.device.isWarming) {
-        return this.platform.Characteristic.CurrentHeaterCoolerState.HEATING;  
+        return this.platform.Characteristic.CurrentHeaterCoolerState.HEATING;
       } else {
         return this.platform.Characteristic.CurrentHeaterCoolerState.IDLE;
       }
@@ -134,7 +134,7 @@ export class TuyaThermostatAccessory {
 
     return this.platform.Characteristic.TargetHeatingCoolingState.OFF;
   }
-  
+
   async getTargetHeaterCoolerState(): Promise<CharacteristicValue> {
     if (this.device.state) {
       return this.platform.Characteristic.TargetHeaterCoolerState.HEAT;
@@ -146,7 +146,7 @@ export class TuyaThermostatAccessory {
   async setTargetHeatingCoolingState(value: CharacteristicValue) {
     if (value !== this.platform.Characteristic.CurrentHeatingCoolingState.HEAT) {
       await this.client.set({dps: 102, set: 0});
-      await this.client.set({dps: 1, set: 0});
+      await this.client.set({dps: 1, set: false});
       return;
     }
 
@@ -155,11 +155,11 @@ export class TuyaThermostatAccessory {
       this.client.set({dps: 1, set: true}),
     ]);
   }
-  
+
   async setTargetHeaterCoolerState(value: CharacteristicValue) {
     if (value !== this.platform.Characteristic.TargetHeaterCoolerState.HEAT) {
       await this.client.set({dps: 102, set: 0});
-      await this.client.set({dps: 1, set: 0});
+      await this.client.set({dps: 1, set: false});
       return;
     }
 
