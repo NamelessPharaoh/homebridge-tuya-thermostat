@@ -7,6 +7,7 @@ interface DeviceConfig {
   name: string;
   id: string;
   key: string;
+  ip?: string;
   disableAfterSeconds?: number;
 }
 
